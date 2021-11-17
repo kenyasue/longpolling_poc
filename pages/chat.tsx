@@ -10,6 +10,7 @@ const Home: NextPage = () => {
 
   const [userId, setUserId] = useState<string>("");
   const [message, setMessage] = useState<string>("");
+  const [messageList, setMessageList] = useState<Array<string>>(["test"]);
 
   useEffect(() => {
 
@@ -17,6 +18,12 @@ const Home: NextPage = () => {
 
       notifierClient.setListener((payload: any) => {
         console.log("notification received", payload);
+
+        payload.notifications.map((row: any) => {
+          messageList.push(`${row.message}`);
+          setMessageList([...messageList])
+        });
+
       });
 
     })();
@@ -34,6 +41,9 @@ const Home: NextPage = () => {
           <div className={styles.messagesContainer}>
             <h2>Messages</h2>
             <div>
+              {messageList.map((message, index) => {
+                return <div key={index}>{message}</div>
+              })}
             </div>
           </div>
           <div className={styles.controllsContainer}>

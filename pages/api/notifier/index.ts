@@ -13,7 +13,6 @@ export default async function handler(
 
   try {
 
-
     const userId = req.body.userId;
     const deviceId = req.body.deviceId;
 

@@ -13,9 +13,6 @@ export default async function handler(
 
     try {
 
-        console.log(`send message server random ${notifierServer.random}`);
-        console.log(`send message server connections`, notifierServer.connections);
-
         const userId = req.body.userId;
         if (!userId) return res.status(402).send("invalid parameter");
 
@@ -25,7 +22,7 @@ export default async function handler(
             await Promise.all(devices.map(async (deviceId) => {
                 await notifierServer.send(deviceId, {
                     userId: userId,
-                    messaage: req.body.message
+                    message: req.body.message
                 });
             }))
 
