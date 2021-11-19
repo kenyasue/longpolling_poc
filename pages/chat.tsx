@@ -34,15 +34,23 @@ const Home: NextPage = () => {
         router.push("/");
       }
 
+      // individual message
       notifierClient.join(deviceId, (payload: any) => {
-        console.log("notification received", payload);
 
         payload.notifications.map((row: any) => {
-          console.log("row", row);
           messageList.push(row);
           setMessageList([...messageList])
         });
 
+      });
+
+      // broadcast channel
+      notifierClient.join("broadcast", (payload: any) => {
+
+        payload.notifications.map((row: any) => {
+          messageList.push(row);
+          setMessageList([...messageList])
+        });
 
       });
 
@@ -94,6 +102,29 @@ const Home: NextPage = () => {
               setMessage("");
               setSendUserId("");
             }}>send</button>
+
+            <button onClick={async (e) => {
+
+              const userId: string = localStorage.getItem(`userId`) as string;
+              const deviceId: string = localStorage.getItem(`deviceId_${userId}`) as string;
+
+              const response = await axios({
+                method: 'post',
+                url: '/api/message',
+                headers: {
+                  userid: userId, // from user
+                  deviceid: deviceId // from device
+                },
+                data: {
+                  userId: "broadcast", // to user
+                  message: message
+                }
+              });
+
+              setMessage("");
+              setSendUserId("");
+            }}>Broadcast</button>
+
           </div>
 
         </div>

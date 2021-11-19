@@ -18,16 +18,26 @@ export default async function handler(
         const userId = req.body.userId;
         if (!userId) return res.status(402).send("invalid parameter");
 
-        const devices = await getDevices(userId);
+        if (userId === "broadcast") {
 
-        if (devices)
-            await Promise.all(devices.map(async (deviceId) => {
-                await notifierServer.send(deviceId, {
-                    fromUserId: req.headers.userid,
-                    userId: userId,
-                    message: req.body.message
-                });
-            }))
+            await notifierServer.send("broadcast", {
+                fromUserId: req.headers.userid,
+                userId: "broadcast",
+                message: req.body.message
+            });
+
+        } else {
+            const devices = await getDevices(userId);
+
+            if (devices)
+                await Promise.all(devices.map(async (deviceId) => {
+                    await notifierServer.send(deviceId, {
+                        fromUserId: req.headers.userid,
+                        userId: userId,
+                        message: req.body.message
+                    });
+                }))
+        }
 
         res.status(200).send("sent");
 
