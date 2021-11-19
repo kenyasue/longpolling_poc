@@ -3,14 +3,12 @@ import axios, { AxiosResponse } from "axios";
 class NotificationClient {
 
     initialized: boolean = false;
-    userId: String | null = null;
-    deviceId: String | null = null;
+    channelId: String | null = null;
     stopListening: boolean = false;
     listener: Function | null = null;
 
     constructor() {
         console.log("NotificationClient initialized");
-        this.startLitening();
     }
 
     wait(sec: number) {
@@ -21,33 +19,23 @@ class NotificationClient {
         })
     }
 
-    async login(userId: String, deviceId: String) {
-
-        this.initialized = true;
-        this.userId = userId;
-        this.deviceId = deviceId;
-    }
-
-    async startLitening() {
-
-        if (!this.userId || !this.deviceId) {
-            await this.wait(1);
-            this.startLitening();
-            return;
-        }
+    async join(channelId: string, callBack: any) {
 
         const response = await axios({
             method: 'post',
             url: '/api/notifier',
             data: {
-                userId: this.userId,
-                deviceId: this.deviceId
+                channelId: channelId,
             }
         });
 
-        if (this.listener && response.data.notifications.length > 0) this.listener(response.data);
+        if (callBack && response.data) callBack(response.data);
 
-        this.startLitening();
+        // to avoid overlow calling stack
+        setTimeout(() => {
+            this.join(channelId, callBack);
+        }, 10)
+
         return;
     }
 

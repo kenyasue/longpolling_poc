@@ -4,8 +4,8 @@ import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import { useRouter } from 'next/router'
-import notifierClient from '../lib/notifierClient'
 import faker from 'faker';
+import axios, { AxiosResponse } from "axios";
 
 const Home: NextPage = () => {
 
@@ -19,13 +19,25 @@ const Home: NextPage = () => {
   const onLogin = async () => {
 
     if (!/^[a-zA-Z0-9]{3,}$/.test(userId)) return alert("invalid username");
+    localStorage.setItem(`userId`, userId);
 
     // generate device name if not exists
     const deviceId: string = localStorage.getItem(`deviceId_${userId}`) || faker.datatype.hexaDecimal(40);
     localStorage.setItem(`deviceId_${userId}`, deviceId);
     console.log(`deviceId is ${deviceId}`);
 
-    await notifierClient.login(userId, deviceId);
+    const response = await axios({
+      method: 'post',
+      url: '/api/login',
+      headers: {
+
+      },
+      data: {
+        userId: userId,
+        deviceId: deviceId
+      }
+    });
+
     router.push("/chat")
 
   };

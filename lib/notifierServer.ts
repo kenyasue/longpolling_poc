@@ -7,21 +7,18 @@ import os from "os";
 import { ifError } from 'assert';
 
 interface connectionInitializer {
-    deviceId: string,
-    userId: string,
+    channelId: string,
     onRelease: Function
 }
 
 class Connection {
-    deviceId: string | null = null;
-    userId: string | null = null;
+    channelId: string | null = null;
     connectionId: string = "";
     onReleaseCallback: Function | undefined;
     released: boolean = false;
 
     constructor(params: connectionInitializer) {
-        this.deviceId = params.deviceId;
-        this.userId = params.userId;
+        this.channelId = params.channelId;
         this.connectionId = faker.datatype.hexaDecimal(40);
         this.onReleaseCallback = params.onRelease;
 
@@ -66,11 +63,11 @@ class NotificationServer {
             rabbitMQConsumeChannel.consume(queue.queue, (msg) => {
 
                 const payload = JSON.parse(msg?.content.toString() as string);
-                const deviceId = payload.deviceId;
+                const channelId = payload.channelId;
                 const data = payload.data;
 
 
-                this.notifyToDevice(deviceId, data);
+                this.notify(channelId, data);
 
             }, { noAck: false });
 
@@ -85,11 +82,10 @@ class NotificationServer {
 
     }
 
-    async standBy(userId: string, deviceId: string, callback: Function) {
-
+    async join(channelId: string, callback: Function) {
 
         const connection: Connection = new Connection({
-            userId, deviceId, onRelease: (data: any, connection: Connection) => {
+            channelId, onRelease: (data: any, connection: Connection) => {
 
                 // remove from pool
                 delete this.connections[connection.connectionId];
@@ -103,12 +99,12 @@ class NotificationServer {
 
     }
 
-    async notifyToDevice(deviceId: string, data: any) {
+    async notify(channelId: string, data: any) {
 
         const connectionsToNotify: Array<Connection> = [];
         Object.keys(this.connections).map(connectionId => {
             const connection: Connection = this.connections[connectionId];
-            if (connection.deviceId === deviceId) connectionsToNotify.push(connection);
+            if (connection.channelId === channelId) connectionsToNotify.push(connection);
         })
 
         if (connectionsToNotify.length === 0) return;
@@ -119,12 +115,12 @@ class NotificationServer {
         });
     }
 
-    async send(deviceId: string, data: any) {
+    async send(channelId: string, data: any) {
 
         if (!this.publishChannel) return console.log("Channel is not ready");
 
         const jsonData = JSON.stringify({
-            deviceId: deviceId,
+            channelId: channelId,
             data: data
         });
 

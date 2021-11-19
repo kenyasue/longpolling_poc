@@ -5,24 +5,44 @@ import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import notifierClient from '../lib/notifierClient'
 import axios, { AxiosResponse } from "axios";
+import { useRouter } from 'next/router'
 
 const Home: NextPage = () => {
 
-  const [userId, setUserId] = useState<string>("");
+  const router = useRouter();
+
+  let userId: string;
+  let deviceId: string;
+
+  const [sendUserId, setSendUserId] = useState<string>("");
   const [message, setMessage] = useState<string>("");
-  const [messageList, setMessageList] = useState<Array<string>>(["test"]);
+  const [messageList, setMessageList] = useState<Array<{
+    userId: string,
+    fromUserId: string,
+    message: string
+  }>>([]);
 
   useEffect(() => {
 
+    const userId: string = localStorage.getItem(`userId`) as string;
+    const deviceId: string = localStorage.getItem(`deviceId_${userId}`) as string;
+
     (async () => {
 
-      notifierClient.setListener((payload: any) => {
+      if (!userId || !deviceId) {
+        alert("No userid and deviceid in localstorage. Please login again");
+        router.push("/");
+      }
+
+      notifierClient.join(deviceId, (payload: any) => {
         console.log("notification received", payload);
 
         payload.notifications.map((row: any) => {
-          messageList.push(`${row.message}`);
+          console.log("row", row);
+          messageList.push(row);
           setMessageList([...messageList])
         });
+
 
       });
 
@@ -42,30 +62,37 @@ const Home: NextPage = () => {
             <h2>Messages</h2>
             <div>
               {messageList.map((message, index) => {
-                return <div key={index}>{message}</div>
+                return <div key={index}>{message.message} from {message.fromUserId}</div>
               })}
             </div>
           </div>
           <div className={styles.controllsContainer}>
             UserID: <input type="text" onChange={(e) => {
-              setUserId(e.target.value)
-            }} value={userId} /><br />
+              setSendUserId(e.target.value)
+            }} value={sendUserId} /><br />
             Message: <input type="text" onChange={(e) => {
               setMessage(e.target.value)
             }} value={message} /><br />
             <button onClick={async (e) => {
 
+              const userId: string = localStorage.getItem(`userId`) as string;
+              const deviceId: string = localStorage.getItem(`deviceId_${userId}`) as string;
+
               const response = await axios({
                 method: 'post',
                 url: '/api/message',
+                headers: {
+                  userid: userId, // from user
+                  deviceid: deviceId // from device
+                },
                 data: {
-                  userId: userId,
+                  userId: sendUserId, // to user
                   message: message
                 }
               });
 
               setMessage("");
-              setUserId("");
+              setSendUserId("");
             }}>send</button>
           </div>
 

@@ -8,8 +8,6 @@ export default async function handler(
     res: NextApiResponse<any>
 ) {
 
-    console.log("req.headers", req.headers);
-
     if (req.method !== "POST")
         res.status(405).send("method not allowed");
 
@@ -18,18 +16,11 @@ export default async function handler(
         const userId = req.body.userId;
         if (!userId) return res.status(402).send("invalid parameter");
 
-        const devices = await getDevices(userId);
+        const deviceId = req.body.deviceId;
+        if (!deviceId) return res.status(402).send("invalid parameter");
 
-        if (devices)
-            await Promise.all(devices.map(async (deviceId) => {
-                await notifierServer.send(deviceId, {
-                    fromUserId: req.headers.userid,
-                    userId: userId,
-                    message: req.body.message
-                });
-            }))
-
-        res.status(200).send("sent");
+        setDevice(userId, deviceId);
+        res.status(200).send("ok");
 
     } catch (e) {
         console.error(e);
