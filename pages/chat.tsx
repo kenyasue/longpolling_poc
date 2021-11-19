@@ -24,6 +24,7 @@ const Home: NextPage = () => {
 
   useEffect(() => {
 
+    notifierClient.setUrl("/api/notifier");
     const userId: string = localStorage.getItem(`userId`) as string;
     const deviceId: string = localStorage.getItem(`deviceId_${userId}`) as string;
 

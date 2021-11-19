@@ -3,9 +3,10 @@ import axios, { AxiosResponse } from "axios";
 class NotificationClient {
 
     initialized: boolean = false;
-    channelId: String | null = null;
+    channelId: string | null = null;
     stopListening: boolean = false;
     listener: Function | null = null;
+    serverUrl: string = "";
 
     constructor() {
         console.log("NotificationClient initialized");
@@ -19,11 +20,15 @@ class NotificationClient {
         })
     }
 
+    setUrl(url: string) {
+        this.serverUrl = url;
+    }
+
     async join(channelId: string, callBack: any) {
 
         const response = await axios({
             method: 'post',
-            url: '/api/notifier',
+            url: this.serverUrl,
             data: {
                 channelId: channelId,
             }

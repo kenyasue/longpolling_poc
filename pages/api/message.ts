@@ -8,8 +8,6 @@ export default async function handler(
     res: NextApiResponse<any>
 ) {
 
-    console.log("req.headers", req.headers);
-
     if (req.method !== "POST")
         res.status(405).send("method not allowed");
 

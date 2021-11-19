@@ -82,7 +82,7 @@ class NotificationServer {
 
     }
 
-    async join(channelId: string, callback: Function) {
+    async listen(channelId: string, callback: Function) {
 
         const connection: Connection = new Connection({
             channelId, onRelease: (data: any, connection: Connection) => {

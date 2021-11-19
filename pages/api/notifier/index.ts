@@ -19,7 +19,7 @@ export default async function handler(
 
     //await setDevice(userId, deviceId);
 
-    notifierServer.join(channelId, (data: any) => {
+    notifierServer.listen(channelId, (data: any) => {
 
       // called when timeout or notifications received
       if (data) res.status(200).json({

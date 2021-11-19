@@ -1,34 +1,60 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Long polling PoC
 
-## Getting Started
+### How to build
 
-First, run the development server:
+```
+$ git clone https://github.com/kenyasue/longpolling_poc.git
+$ cd longpolling_poc
+$ sudo docker-compose up -d
+$ npm install
+$ npm run build
+$ npm run start
 
-```bash
-npm run dev
-# or
-yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### How to use the library
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+#### Client side
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+    import notifierClient from '../lib/notifierClient'
 
-## Learn More
+    notifierClient.setUrl("/api/notifier");
 
-To learn more about Next.js, take a look at the following resources:
+    notifierClient.join("channel", (payload: any) => {
+        console.log("Got payload",payload);
+    });
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```
+Check the working source code example.
+https://github.com/kenyasue/longpolling_poc/blob/master/pages/chat.tsx
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+#### Server side
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```
+
+    import notifierServer from '../../../lib/notifierServer';
+
+
+    ## in the URL post event
+    const channelId = req.body.channelId;
+
+    if (!channelId) return res.status(402).send("invalid parameter");
+
+    //await setDevice(userId, deviceId);
+
+    notifierServer.listen(channelId, (data: any) => {
+
+      // called when timeout or notifications received
+      if (data) res.status(200).json(data);
+
+      else res.status(200).json({});
+
+    });
+
+```
+Check the working source code example.
+https://github.com/kenyasue/longpolling_poc/blob/master/pages/api/message.ts
