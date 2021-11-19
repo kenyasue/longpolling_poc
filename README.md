@@ -12,6 +12,13 @@ $ npm run start
 
 ```
 
+### How to use
+1. Open this url http://localhost:3000
+2. Enter the userid
+3. You can open several browsers with in incognito mode with different userid.
+4. To send individual message, enter userid to send and message.
+5. You can send broadcast message to all users to.
+
 ### How to use the library
 
 #### Client side
