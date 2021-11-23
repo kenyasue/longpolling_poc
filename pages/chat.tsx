@@ -21,6 +21,9 @@ const Home: NextPage = () => {
     fromUserId: string,
     message: string
   }>>([]);
+  const [burstTimer, setBurstTimer] = useState<number>(0);
+  const [sentCount, setSentCount] = useState<number>(0);
+  const [receivedCount, setReceivedCount] = useState<number>(0);
 
   useEffect(() => {
 
@@ -36,7 +39,7 @@ const Home: NextPage = () => {
       }
 
       // individual message
-      notifierClient.join(deviceId, (payload: any) => {
+      notifierClient.join(deviceId, deviceId, (payload: any) => {
 
         payload.notifications.map((row: any) => {
           messageList.push(row);
@@ -46,13 +49,21 @@ const Home: NextPage = () => {
       });
 
       // broadcast channel
-      notifierClient.join("broadcast", (payload: any) => {
+      notifierClient.join("broadcast", deviceId, (payload: any) => {
 
         payload.notifications.map((row: any) => {
           messageList.push(row);
           setMessageList([...messageList])
         });
 
+      });
+
+      // burstmode channel
+      let received: number = 0;
+      notifierClient.join("burst", deviceId, (payload: any) => {
+
+        //console.log("burstmode payload", payload);
+        setReceivedCount(received += payload.notifications.length);
       });
 
     })();
@@ -62,6 +73,35 @@ const Home: NextPage = () => {
     };
 
   }, []);
+
+  const startBurst = async () => {
+
+    let sent: number = 0;
+    const timer: number = window.setInterval(async () => {
+
+      const response = await axios({
+        method: 'post',
+        url: '/api/message',
+        headers: {
+          userid: userId, // from user
+          deviceid: deviceId // from device
+        },
+        data: {
+          userId: "burst", // to user
+          message: "burst"
+        }
+      });
+
+      setSentCount(sent++);
+
+    }, 10);
+
+    setBurstTimer(timer);
+  }
+
+  const stopBurst = () => {
+    clearInterval(burstTimer);
+  }
 
   return (
     <div className={styles.container}>
@@ -75,7 +115,8 @@ const Home: NextPage = () => {
               })}
             </div>
           </div>
-          <div className={styles.controllsContainer}>
+          <div className={styles.controllsContainer1}>
+            <h3>Send a message</h3>
             UserID: <input type="text" onChange={(e) => {
               setSendUserId(e.target.value)
             }} value={sendUserId} /><br />
@@ -122,12 +163,16 @@ const Home: NextPage = () => {
                 }
               });
 
-              setMessage("");
               setSendUserId("");
             }}>Broadcast</button>
 
           </div>
-
+          <div className={styles.controllsContainer2}>
+            <h3>Burst Mode</h3>
+            <button onClick={e => startBurst()}>Start</button>
+            <button onClick={e => stopBurst()}>Stop</button><br />
+            received {receivedCount} / sent {sentCount}
+          </div>
         </div>
       </main >
 

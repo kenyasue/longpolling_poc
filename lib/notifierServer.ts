@@ -5,6 +5,7 @@ import { timeStamp } from 'console';
 import amqp from "amqplib";
 import os from "os";
 import { ifError } from 'assert';
+import SimpleQueue from './simpleQueue'
 
 interface connectionInitializer {
     channelId: string,
@@ -41,6 +42,7 @@ class NotificationServer {
     publishChannel: amqp.Channel | null = null;
     pid: number = process.pid;
     random: string = faker.datatype.string(12);
+    memoryQueue: SimpleQueue = new SimpleQueue();
 
     constructor() {
 
@@ -66,7 +68,6 @@ class NotificationServer {
                 const channelId = payload.channelId;
                 const data = payload.data;
 
-
                 this.notify(channelId, data);
 
             }, { noAck: false });
@@ -82,7 +83,7 @@ class NotificationServer {
 
     }
 
-    async listen(channelId: string, callback: Function) {
+    async listen(channelId: string, deviceId: string, callback: Function) {
 
         const connection: Connection = new Connection({
             channelId, onRelease: (data: any, connection: Connection) => {
@@ -107,7 +108,10 @@ class NotificationServer {
             if (connection.channelId === channelId) connectionsToNotify.push(connection);
         })
 
-        if (connectionsToNotify.length === 0) return;
+        if (connectionsToNotify.length === 0) {
+            this.memoryQueue.push(`${channelId}`, data);
+            console.log("queue count", this.memoryQueue.count());
+        }
 
         connectionsToNotify.map(connection => {
             if (connection.onReleaseCallback)

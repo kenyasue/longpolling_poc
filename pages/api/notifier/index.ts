@@ -14,12 +14,14 @@ export default async function handler(
   try {
 
     const channelId = req.body.channelId;
+    const deviceId = req.body.deviceId;
 
     if (!channelId) return res.status(402).send("invalid parameter");
+    if (!deviceId) return res.status(402).send("invalid parameter");
 
     //await setDevice(userId, deviceId);
 
-    notifierServer.listen(channelId, (data: any) => {
+    notifierServer.listen(channelId, deviceId, (data: any) => {
 
       // called when timeout or notifications received
       if (data) res.status(200).json({

@@ -126,14 +126,22 @@
   background-color: #eee;
   border: 1px solid #ddd;
   padding: 10px;
-  grid-template-columns: 50% 50%;
-  grid-template-rows: 100%;
+  grid-template-areas:
+   "messages control1"
+   "messages control2"
+
 }
 
 .messagesContainer{
+  grid-area: messages;
   height: 100%;
   border-right: 1px solid #ddd;
 }
-.controllsContainer{
-  height: 100%;
+.controllsContainer1{
+  grid-area: control1;
+  height: 50%;
+}
+.controllsContainer2{
+  grid-area: control2;
+  height: 50%;
 }

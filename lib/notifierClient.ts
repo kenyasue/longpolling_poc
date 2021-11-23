@@ -24,13 +24,14 @@ class NotificationClient {
         this.serverUrl = url;
     }
 
-    async join(channelId: string, callBack: any) {
+    async join(channelId: string, deviceId: string, callBack: any) {
 
         const response = await axios({
             method: 'post',
             url: this.serverUrl,
             data: {
                 channelId: channelId,
+                deviceId: deviceId
             }
         });
 
@@ -38,7 +39,7 @@ class NotificationClient {
 
         // to avoid overlow calling stack
         setTimeout(() => {
-            this.join(channelId, callBack);
+            this.join(channelId, deviceId, callBack);
         }, 10)
 
         return;

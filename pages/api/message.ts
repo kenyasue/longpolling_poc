@@ -24,6 +24,14 @@ export default async function handler(
                 message: req.body.message
             });
 
+        } if (userId === "burst") {
+
+            await notifierServer.send("burst", {
+                fromUserId: req.headers.userid,
+                userId: "burst",
+                message: req.body.message
+            });
+
         } else {
             const devices = await getDevices(userId);
 
