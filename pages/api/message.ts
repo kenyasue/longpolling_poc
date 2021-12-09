@@ -1,6 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
-import notifierServer from '../../lib/notifierServer';
+import notifierServer from '../../lib/notificationServer';
 import { setDevice, getDevices } from '../../lib/userdevice';
 
 export default async function handler(

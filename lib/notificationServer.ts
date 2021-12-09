@@ -5,32 +5,26 @@ import { timeStamp } from 'console';
 import amqp from "amqplib";
 import os from "os";
 import { ifError } from 'assert';
-import SimpleQueue from './simpleQueue'
 
 interface connectionInitializer {
     channelId: string,
-    onRelease: Function
+    onNotify: Function
 }
 
 class Connection {
     channelId: string | null = null;
     connectionId: string = "";
-    onReleaseCallback: Function | undefined;
-    released: boolean = false;
+    onNotify: Function | undefined;
 
     constructor(params: connectionInitializer) {
         this.channelId = params.channelId;
         this.connectionId = faker.datatype.hexaDecimal(40);
-        this.onReleaseCallback = params.onRelease;
+        this.onNotify = params.onNotify;
 
-        setTimeout(() => {
-            this.releaseConnection();
-        }, 5 * 1000);
     }
 
-    async releaseConnection() {
-        if (this.onReleaseCallback && !this.released)
-            this.onReleaseCallback(null, this);
+    async notify() {
+        if (this.onNotify) this.onNotify(null, this);
     }
 }
 
@@ -42,10 +36,10 @@ class NotificationServer {
     publishChannel: amqp.Channel | null = null;
     pid: number = process.pid;
     random: string = faker.datatype.string(12);
-    memoryQueue: SimpleQueue = new SimpleQueue();
 
     constructor() {
 
+        console.log("notification server !!!!!");
         (async () => {
 
             const rabbitMQConnetion = await amqp.connect("amqp://myuser:mypassword@localhost");
@@ -68,6 +62,7 @@ class NotificationServer {
                 const channelId = payload.channelId;
                 const data = payload.data;
 
+
                 this.notify(channelId, data);
 
             }, { noAck: false });
@@ -83,20 +78,22 @@ class NotificationServer {
 
     }
 
-    async listen(channelId: string, deviceId: string, callback: Function) {
+    async subscribe(channelId: string, callback: Function): Promise<string> {
 
         const connection: Connection = new Connection({
-            channelId, onRelease: (data: any, connection: Connection) => {
-
-                // remove from pool
-                delete this.connections[connection.connectionId];
-                connection.released = true;
+            channelId, onNotify: (data: any, connection: Connection) => {
                 if (callback) callback(data)
             }
 
         });
 
         this.connections[connection.connectionId] = connection;
+        return connection.connectionId;
+    }
+
+    async unsubscribe(connectionId: string) {
+
+        delete this.connections[connectionId];
 
     }
 
@@ -108,14 +105,10 @@ class NotificationServer {
             if (connection.channelId === channelId) connectionsToNotify.push(connection);
         })
 
-        if (connectionsToNotify.length === 0) {
-            this.memoryQueue.push(`${channelId}`, data);
-            console.log("queue count", this.memoryQueue.count());
-        }
-
+        console.log("this.connections", this.connections);
         connectionsToNotify.map(connection => {
-            if (connection.onReleaseCallback)
-                connection.onReleaseCallback([data], connection);
+            if (connection.onNotify)
+                connection.onNotify([data], connection);
         });
     }
 

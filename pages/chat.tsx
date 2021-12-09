@@ -3,9 +3,14 @@ import React, { useState, useEffect } from "react";
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
-import notifierClient from '../lib/notifierClient'
+import notifierClientLP from '../lib/notifierClientLongPolling'
+import notifierClientSSE from '../lib/notifierClientSSE' // server side events
 import axios, { AxiosResponse } from "axios";
 import { useRouter } from 'next/router'
+
+// switch here to use another logic
+//const notifierClient = notifierClientLP;
+const notifierClient = notifierClientSSE;
 
 const Home: NextPage = () => {
 
@@ -27,7 +32,10 @@ const Home: NextPage = () => {
 
   useEffect(() => {
 
-    notifierClient.setUrl("/api/notifier");
+    // switch here to use another logic
+    //notifierClient.setUrl("/api/notifier/longpolling");
+    notifierClient.setUrl("/api/notifier/sse");
+
     const userId: string = localStorage.getItem(`userId`) as string;
     const deviceId: string = localStorage.getItem(`deviceId_${userId}`) as string;
 
@@ -41,6 +49,8 @@ const Home: NextPage = () => {
       // individual message
       notifierClient.join(deviceId, deviceId, (payload: any) => {
 
+        if (!payload || !payload.notifications) return;
+
         payload.notifications.map((row: any) => {
           messageList.push(row);
           setMessageList([...messageList])
@@ -50,6 +60,8 @@ const Home: NextPage = () => {
 
       // broadcast channel
       notifierClient.join("broadcast", deviceId, (payload: any) => {
+
+        if (!payload || !payload.notifications) return;
 
         payload.notifications.map((row: any) => {
           messageList.push(row);
@@ -61,6 +73,8 @@ const Home: NextPage = () => {
       // burstmode channel
       let received: number = 0;
       notifierClient.join("burst", deviceId, (payload: any) => {
+
+        if (!payload || !payload.notifications) return;
 
         //console.log("burstmode payload", payload);
         setReceivedCount(received += payload.notifications.length);

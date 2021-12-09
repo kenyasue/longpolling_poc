@@ -1,6 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
-import notifierServer from '../../../lib/notifierServer';
+import notificationServer from '../../../lib/notificationServer';
 import { setDevice, getDevices } from '../../../lib/userdevice';
 
 export default async function handler(
@@ -14,14 +14,10 @@ export default async function handler(
   try {
 
     const channelId = req.body.channelId;
-    const deviceId = req.body.deviceId;
 
     if (!channelId) return res.status(402).send("invalid parameter");
-    if (!deviceId) return res.status(402).send("invalid parameter");
 
-    //await setDevice(userId, deviceId);
-
-    notifierServer.listen(channelId, deviceId, (data: any) => {
+    const connectionId: string = await notificationServer.subscribe(channelId, (data: any) => {
 
       // called when timeout or notifications received
       if (data) res.status(200).json({
@@ -31,6 +27,8 @@ export default async function handler(
       else res.status(200).json({
         notifications: []
       });
+
+      notificationServer.unsubscribe(connectionId);
 
     });
 
